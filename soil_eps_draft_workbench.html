@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap');
+
+  :root {
+    --soil-dark: #2C1A0E;
+    --soil-mid: #5C3D1E;
+    --soil-warm: #8B5E3C;
+    --soil-sand: #C4A882;
+    --soil-light: #E8D9C0;
+    --soil-pale: #F5EFE4;
+    --eps-green: #3A6B35;
+    --eps-light: #7AB648;
+    --eps-pale: #D4EDBC;
+    --accent-clay: #B05C2A;
+    --accent-moss: #4A7C59;
+    --text-main: #1C0F05;
+    --text-sub: #5C3D1E;
+    --border: #C4A882;
+    --shadow: rgba(44,26,14,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--soil-pale);
+    color: var(--text-main);
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(ellipse at 20% 0%, rgba(90,60,30,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(58,107,53,0.06) 0%, transparent 60%);
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--soil-dark);
+    color: var(--soil-light);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--accent-clay);
+  }
+  .header-left {}
+  .header-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--soil-sand);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .header-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-title .icon {
+    width: 32px; height: 32px;
+    background: var(--eps-green);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .btn-generate {
+    background: var(--eps-green);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-generate:hover { background: #2d5229; transform: translateY(-1px); }
+  .btn-generate.loading { background: #888; cursor: not-allowed; }
+
+  /* LAYOUT */
+  .workspace {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* PANEL */
+  .panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+  .panel-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--soil-dark);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--soil-light);
+  }
+  .panel-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--eps-green);
+  }
+
+  /* FORM ELEMENTS */
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--soil-mid);
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: 'Lato', sans-serif;
+    font-size: 13px;
+    color: var(--text-main);
+    background: var(--soil-pale);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--eps-green);
+    background: #fff;
+  }
+  .form-input::placeholder, .form-textarea::placeholder { color: #aaa; }
+  .form-textarea { resize: vertical; min-height: 72px; }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235C3D1E' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+
+  .section-subtitle {
+    font-size: 11px;
+    color: var(--soil-warm);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* RIGHT PANEL */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* UPLOAD AREA */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--soil-pale);
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--eps-green); background: var(--eps-pale); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-zone .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-zone p { font-size: 13px; color: var(--soil-mid); }
+  .upload-zone span { font-size: 11px; color: #aaa; }
+
+  .file-desc-input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 12px;
+    font-family: 'Lato', sans-serif;
+    background: #fff;
+    color: var(--text-main);
+    outline: none;
+    resize: vertical;
+    min-height: 54px;
+  }
+  .file-desc-input:focus { border-color: var(--eps-green); }
+
+  /* SECTION TAGS */
+  .section-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+  .tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--soil-mid);
+    font-weight: 600;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tag:hover { border-color: var(--eps-green); color: var(--eps-green); }
+  .tag.active { background: var(--eps-green); color: #fff; border-color: var(--eps-green); }
+
+  .btn-add {
+    width: 100%;
+    padding: 10px;
+    background: var(--soil-dark);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Noto Serif SC', serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-add:hover { background: var(--soil-mid); }
+
+  /* GENERATE SECTION */
+  .generate-panel { }
+  .generate-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .generate-hint {
+    font-size: 12px;
+    color: var(--soil-warm);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  .info-box {
+    background: var(--eps-pale);
+    border: 1px solid #b4db96;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--eps-green);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.7;
+  }
+  .info-box.warn {
+    background: #FFF8E7;
+    border-color: #E8C44A;
+    color: #7A5C00;
+  }
+
+  /* BOTTOM GRID */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .evidence-list { min-height: 100px; }
+  .ev-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: var(--soil-pale);
+    margin-bottom: 7px;
+    font-size: 12px;
+    color: var(--soil-dark);
+    border: 1px solid var(--soil-light);
+  }
+  .ev-item .ev-icon { font-size: 14px; margin-top: 1px; }
+  .ev-item .ev-name { flex: 1; font-weight: 600; }
+  .ev-item .ev-tag { font-size: 10px; background: var(--eps-green); color: #fff; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .ev-item .ev-del { color: #bbb; cursor: pointer; font-size: 14px; }
+  .ev-item .ev-del:hover { color: var(--accent-clay); }
+
+  .empty-hint {
+    color: #bbb;
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 0;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* RESULT */
+  .result-box {
+    min-height: 100px;
+    background: var(--soil-pale);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-main);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-family: 'Noto Serif SC', serif;
+    position: relative;
+  }
+  .result-placeholder { color: #bbb; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .result-actions {
+    display: flex; gap: 8px; margin-top: 8px;
+    justify-content: flex-end;
+  }
+  .btn-small {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--soil-mid);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .btn-small:hover { border-color: var(--eps-green); color: var(--eps-green); }
+  .btn-small.primary { background: var(--eps-green); color: #fff; border-color: var(--eps-green); }
+  .btn-small.primary:hover { background: #2d5229; }
+
+  .streaming-cursor { display: inline-block; width: 2px; height: 14px; background: var(--eps-green); animation: blink 0.8s infinite; margin-left: 2px; vertical-align: middle; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--soil-mid);
+    margin-top: 6px;
+  }
+  .checkbox-row input { accent-color: var(--eps-green); cursor: pointer; }
+
+  .api-key-row { position: relative; }
+  .api-key-toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--soil-warm);
+    font-size: 14px;
+  }
+  .progress-bar {
+    height: 3px; background: var(--eps-pale); border-radius: 2px; margin-top: 8px; overflow: hidden;
+    display: none;
+  }
+  .progress-fill {
+    height: 100%; background: var(--eps-green); border-radius: 2px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-label">本地土壤科学论文初稿工作台</div>
+    <div class="header-title">
+      <div class="icon">🌱</div>
+      土壤EPS论文初稿助手
+    </div>
+  </div>
+  <button class="btn-generate" id="mainGenBtn" onclick="handleMainGenerate()">
+    ✦ 生成初稿
+  </button>
+</div>
+
+<div class="workspace">
+
+  <!-- LEFT: CONFIG -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>项目信息</div>
+      <div class="form-group">
+        <label class="form-label">文章题目或主题</label>
+        <input class="form-input" id="paperTitle" placeholder="例如：黄土高原农田EPS对土壤结构的影响" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">研究目标</label>
+        <textarea class="form-textarea" id="researchGoal" placeholder="说明研究类型、创新点、希望初稿强调的内容。例如：研究不同耕作方式下EPS含量变化及其对团聚体稳定性的影响机制。"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">土壤类型 / 研究区域</label>
+        <input class="form-input" id="soilType" placeholder="例如：黄壤、黑土、红壤；华北平原" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">EPS提取方法</label>
+        <select class="form-select" id="epsMethod">
+          <option value="">请选择或自定义</option>
+          <option>热水提取法（HWE）</option>
+          <option>CER离子交换树脂法</option>
+          <option>超声波辅助提取</option>
+          <option>碱提取法（NaOH）</option>
+          <option>甲醇/乙醇沉淀法</option>
+          <option>自定义（见研究目标说明）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot" style="background:var(--accent-clay)"></span>模型设置</div>
+      <div class="form-group">
+        <label class="form-label">模型来源</label>
+        <select class="form-select" id="modelSource" onchange="handleModelSourceChange()">
+          <option value="claude">Claude API（在线，需 API Key）</option>
+          <option value="ollama">本地 Ollama（免费，无需 Key）</option>
+          <option value="openai">OpenAI 兼容接口</option>
+        </select>
+        <div class="section-subtitle" id="modelHint">推荐使用 claude-sonnet-4-20250514，输出质量最佳。</div>
+      </div>
+      <div class="form-group api-key-row" id="apiKeyGroup">
+        <label class="form-label">API Key</label>
+        <input class="form-input" id="apiKey" type="password" placeholder="sk-ant-..." />
+        <button class="api-key-toggle" onclick="toggleKey()">👁</button>
+      </div>
+      <div class="form-group" id="modelNameGroup">
+        <label class="form-label">模型名称</label>
+        <input class="form-input" id="modelName" value="claude-sonnet-4-20250514" placeholder="例如 claude-sonnet-4-20250514" />
+      </div>
+      <div class="form-group" id="baseUrlGroup" style="display:none;">
+        <label class="form-label">接口地址 Base URL</label>
+        <input class="form-input" id="baseUrl" placeholder="http://localhost:11434（Ollama默认）" />
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="citationCheck" checked />
+        <label for="citationCheck">生成时要求每段附证据来源标注</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="bilingualCheck" />
+        <label for="bilingualCheck">同时输出中英双语段落</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <!-- UPLOAD -->
+    <div class="panel">
+      <div class="panel-title"><span class="dot" style="background:var(--accent-moss)"></span>上传证据材料</div>
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.csv,.xlsx,.png,.jpg" onchange="handleFileUpload(event)" style="display:none" />
+        <div class="upload-icon">📂</div>
+        <p>点击选择文件或拖拽至此处</p>
+        <span>支持 PDF / Word / Excel / 图片（EPS图谱、团聚体数据等）</span>
+      </div>
+      <textarea class="file-desc-input" id="fileDesc" placeholder="说明这个文件如何使用，例如：EPS含量测定数据表、扫描电镜图、土壤团聚体分析结果、参考文献PDF等。"></textarea>
+      <div class="section-tags" id="sectionTags">
+        <span class="tag active" onclick="toggleTag(this)">引言 Introduction</span>
+        <span class="tag" onclick="toggleTag(this)">材料与方法</span>
+        <span class="tag" onclick="toggleTag(this)">EPS提取与表征</span>
+        <span class="tag" onclick="toggleTag(this)">结果与讨论</span>
+        <span class="tag" onclick="toggleTag(this)">团聚体稳定性</span>
+        <span class="tag" onclick="toggleTag(this)">摘要 Abstract</span>
+        <span class="tag" onclick="toggleTag(this)">结论 Conclusion</span>
+      </div>
+      <button class="btn-add" onclick="addMaterial()">＋ 添加材料</button>
+    </div>
+
+    <!-- GENERATE -->
+    <div class="panel generate-panel">
+      <div class="generate-header">
+        <div class="panel-title" style="margin-bottom:0;border:none;padding:0"><span class="dot"></span>生成章节</div>
+        <select class="form-select" id="targetSection" style="width:200px">
+          <option>引言 Introduction</option>
+          <option>材料与方法</option>
+          <option>EPS提取与表征</option>
+          <option>结果与讨论</option>
+          <option>团聚体稳定性分析</option>
+          <option>摘要 Abstract</option>
+          <option>结论 Conclusion</option>
+        </select>
+      </div>
+      <p class="generate-hint" style="margin-top:10px;">生成规则会要求每段附证据来源；无法由材料支持的说法必须标记 <b>[需确认]</b>。</p>
+      <div class="info-box" id="modelInfoBox">
+        ✦ Claude API 模式：请在左侧填入 API Key，点击上方"生成初稿"或下方章节按钮开始生成。
+      </div>
+      <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;" id="sectionBtns">
+        <button class="btn-small" onclick="generateSection('引言 Introduction')">生成引言</button>
+        <button class="btn-small" onclick="generateSection('材料与方法')">生成方法</button>
+        <button class="btn-small" onclick="generateSection('结果与讨论')">生成结果</button>
+        <button class="btn-small" onclick="generateSection('摘要 Abstract')">生成摘要</button>
+        <button class="btn-small primary" onclick="generateSection('结论 Conclusion')">生成结论</button>
+      </div>
+    </div>
+
+    <!-- BOTTOM: EVIDENCE + RESULT -->
+    <div class="bottom-grid">
+      <div class="panel evidence-list">
+        <div class="panel-title"><span class="dot" style="background:var(--accent-clay)"></span>证据材料库</div>
+        <div id="materialList"><div class="empty-hint">还没有上传材料。</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="dot"></span>生成结果</div>
+        <div class="result-box" id="resultBox">
+          <span class="result-placeholder">生成的初稿会显示在这里。</span>
+        </div>
+        <div class="result-actions" id="resultActions" style="display:none">
+          <button class="btn-small" onclick="copyResult()">📋 复制</button>
+          <button class="btn-small" onclick="clearResult()">🗑 清空</button>
+          <button class="btn-small primary" onclick="exportTxt()">⬇ 导出 .txt</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let materials = [];
+let generating = false;
+
+function toggleTag(el) {
+  el.classList.toggle('active');
+}
+
+function handleModelSourceChange() {
+  const src = document.getElementById('modelSource').value;
+  const hints = {
+    claude: '推荐使用 claude-sonnet-4-20250514，输出质量最佳。',
+    ollama: '需先在本机安装 Ollama 并运行：ollama pull deepseek-r1:8b',
+    openai: '填入兼容 OpenAI 接口的 Base URL 和 API Key。'
+  };
+  document.getElementById('modelHint').textContent = hints[src];
+  document.getElementById('baseUrlGroup').style.display = (src !== 'claude') ? 'block' : 'none';
+  document.getElementById('apiKeyGroup').style.display = (src === 'ollama') ? 'none' : 'block';
+  const infoMsgs = {
+    claude: '✦ Claude API 模式：请在左侧填入 API Key，点击上方"生成初稿"或下方章节按钮开始生成。',
+    ollama: '✦ 本地 Ollama 模式：免费，无需 Key，但需先在本机安装 Ollama 并拉取模型。',
+    openai: '✦ OpenAI 兼容模式：填入 Base URL 与 API Key 即可使用任意兼容接口。'
+  };
+  document.getElementById('modelInfoBox').textContent = infoMsgs[src];
+  if (src === 'ollama') {
+    document.getElementById('modelName').value = 'deepseek-r1:8b';
+    document.getElementById('baseUrl').value = 'http://localhost:11434';
+  } else if (src === 'claude') {
+    document.getElementById('modelName').value = 'claude-sonnet-4-20250514';
+  }
+}
+
+function toggleKey() {
+  const f = document.getElementById('apiKey');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+function handleFileUpload(e) {
+  // just register filenames visually; actual read would happen in real impl
+}
+
+function addMaterial() {
+  const desc = document.getElementById('fileDesc').value.trim();
+  const activeTags = [...document.querySelectorAll('#sectionTags .tag.active')].map(t => t.textContent);
+  const fileInput = document.getElementById('fileInput');
+  const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : '（无文件，仅描述）';
+  if (!desc && fileInput.files.length === 0) {
+    alert('请上传文件或填写材料说明。');
+    return;
+  }
+  materials.push({ name: fileName, desc: desc || '无描述', tags: activeTags });
+  renderMaterials();
+  document.getElementById('fileDesc').value = '';
+  fileInput.value = '';
+}
+
+function renderMaterials() {
+  const list = document.getElementById('materialList');
+  if (materials.length === 0) {
+    list.innerHTML = '<div class="empty-hint">还没有上传材料。</div>';
+    return;
+  }
+  list.innerHTML = materials.map((m, i) => `
+    <div class="ev-item">
+      <span class="ev-icon">📄</span>
+      <div style="flex:1;min-width:0">
+        <div class="ev-name" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name}</div>
+        <div style="font-size:10px;color:#888;margin-top:2px;">${m.desc.slice(0,40)}${m.desc.length>40?'…':''}</div>
+        <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${m.tags.map(t=>`<span class="ev-tag">${t}</span>`).join('')}</div>
+      </div>
+      <span class="ev-del" onclick="deleteMaterial(${i})">✕</span>
+    </div>
+  `).join('');
+}
+
+function deleteMaterial(i) {
+  materials.splice(i, 1);
+  renderMaterials();
+}
+
+function buildPrompt(section) {
+  const title = document.getElementById('paperTitle').value || '（未填写）';
+  const goal = document.getElementById('researchGoal').value || '（未填写）';
+  const soilType = document.getElementById('soilType').value || '（未填写）';
+  const epsMethod = document.getElementById('epsMethod').value || '（未填写）';
+  const withCitation = document.getElementById('citationCheck').checked;
+  const bilingual = document.getElementById('bilingualCheck').checked;
+  const matSummary = materials.length > 0
+    ? materials.map((m, i) => `[材料${i+1}] 文件：${m.name}，说明：${m.desc}，用于章节：${m.tags.join('、') || '通用'}`).join('\n')
+    : '（无上传材料，请根据研究背景合理推断）';
+
+  return `你是一位专业的土壤科学与微生物学论文写作助手，专注于土壤胞外聚合物（EPS，Extracellular Polymeric Substances）相关研究。
+
+请为以下研究撰写【${section}】章节的初稿：
+
+## 项目信息
+- 文章题目/主题：${title}
+- 研究目标：${goal}
+- 土壤类型/研究区域：${soilType}
+- EPS提取方法：${epsMethod}
+
+## 证据材料
+${matSummary}
+
+## 写作要求
+1. 使用专业学术语言，符合国际土壤学期刊（如 Soil Biology & Biochemistry、Geoderma、Applied Soil Ecology）投稿风格。
+2. 重点围绕 EPS 的生物学功能（土壤团聚体稳定性、水分保持、微生物定殖）展开。
+${withCitation ? '3. 每段结尾标注证据来源，如：（来源：材料1 / 文献推荐）；无法证实的内容标记 [需确认]。' : ''}
+${bilingual ? '4. 每段先给出中文，再给出对应英文翻译，用"---EN---"分隔。' : ''}
+5. 逻辑严密，段落间有清晰过渡，避免重复。
+
+请直接输出正文内容，不要输出标题"${section}"本身。`;
+}
+
+async function generateSection(section) {
+  if (generating) return;
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const modelSrc = document.getElementById('modelSource').value;
+  const modelName = document.getElementById('modelName').value.trim() || 'claude-sonnet-4-20250514';
+
+  if (modelSrc === 'claude' && !apiKey) {
+    showWarn('请先在左侧填入 Claude API Key。');
+    return;
+  }
+
+  generating = true;
+  setGeneratingUI(true);
+
+  const prompt = buildPrompt(section);
+  const resultBox = document.getElementById('resultBox');
+  resultBox.innerHTML = `正在生成【${section}】<span class="streaming-cursor"></span>`;
+  document.getElementById('resultActions').style.display = 'none';
+
+  try {
+    if (modelSrc === 'claude') {
+      await streamClaude(prompt, apiKey, modelName);
+    } else {
+      await streamOllama(prompt, modelName);
+    }
+    document.getElementById('resultActions').style.display = 'flex';
+  } catch (err) {
+    resultBox.innerHTML = `<span style="color:#c0392b;">⚠ 生成失败：${err.message}</span>`;
+  }
+
+  generating = false;
+  setGeneratingUI(false);
+}
+
+async function streamClaude(prompt, apiKey, model) {
+  const resultBox = document.getElementById('resultBox');
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 2000,
+      stream: true,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || resp.statusText);
+  }
+
+  let text = '';
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n');
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.type === 'content_block_delta' && data.delta?.text) {
+            text += data.delta.text;
+            resultBox.innerHTML = escapeHtml(text) + '<span class="streaming-cursor"></span>';
+            resultBox.scrollTop = resultBox.scrollHeight;
+          }
+        } catch {}
+      }
+    }
+  }
+  resultBox.innerHTML = escapeHtml(text);
+}
+
+async function streamOllama(prompt, model) {
+  const baseUrl = document.getElementById('baseUrl').value.trim() || 'http://localhost:11434';
+  const resultBox = document.getElementById('resultBox');
+  const resp = await fetch(`${baseUrl}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, stream: true })
+  });
+  if (!resp.ok) throw new Error('Ollama 接口返回错误：' + resp.status);
+  let text = '';
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const lines = decoder.decode(value).split('\n').filter(Boolean);
+    for (const line of lines) {
+      try {
+        const d = JSON.parse(line);
+        if (d.response) { text += d.response; }
+      } catch {}
+    }
+    resultBox.innerHTML = escapeHtml(text) + '<span class="streaming-cursor"></span>';
+  }
+  resultBox.innerHTML = escapeHtml(text);
+}
+
+function handleMainGenerate() {
+  const section = document.getElementById('targetSection').value;
+  generateSection(section);
+}
+
+function setGeneratingUI(on) {
+  const btn = document.getElementById('mainGenBtn');
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  if (on) {
+    btn.textContent = '⏳ 生成中…';
+    btn.classList.add('loading');
+    bar.style.display = 'block';
+    let w = 0;
+    window._progTimer = setInterval(() => { w = Math.min(w + Math.random() * 8, 90); fill.style.width = w + '%'; }, 400);
+  } else {
+    btn.innerHTML = '✦ 生成初稿';
+    btn.classList.remove('loading');
+    fill.style.width = '100%';
+    setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0%'; }, 600);
+    clearInterval(window._progTimer);
+  }
+}
+
+function showWarn(msg) {
+  const box = document.getElementById('modelInfoBox');
+  box.className = 'info-box warn';
+  box.textContent = '⚠ ' + msg;
+  setTimeout(() => {
+    box.className = 'info-box';
+    handleModelSourceChange();
+  }, 3000);
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function copyResult() {
+  const text = document.getElementById('resultBox').innerText;
+  navigator.clipboard.writeText(text).then(() => alert('已复制到剪贴板！'));
+}
+
+function clearResult() {
+  document.getElementById('resultBox').innerHTML = '<span class="result-placeholder">生成的初稿会显示在这里。</span>';
+  document.getElementById('resultActions').style.display = 'none';
+}
+
+function exportTxt() {
+  const text = document.getElementById('resultBox').innerText;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '土壤EPS论文初稿.txt';
+  a.click();
+}
+</script>
+</body>
+</html>
